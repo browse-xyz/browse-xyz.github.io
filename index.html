@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Browser</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    /* Browser Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .controls input[type="text"] {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .controls button {
+      background: #3498db;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .controls button:hover {
+      background: #2980b9;
+    }
+
+    .controls button:disabled {
+      background: #7f8c8d;
+      cursor: not-allowed;
+    }
+
+    /* Iframe Area */
+    iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Simple Web Browser</h1>
+    <div class="controls">
+      <button id="back-btn" disabled>Back</button>
+      <button id="forward-btn" disabled>Forward</button>
+      <input type="text" id="url-bar" placeholder="Enter a URL" />
+      <button id="go-btn">Go</button>
+    </div>
+  </header>
+  <iframe id="browser-frame" src="about:blank"></iframe>
+
+  <script>
+    const urlBar = document.getElementById('url-bar');
+    const goButton = document.getElementById('go-btn');
+    const backButton = document.getElementById('back-btn');
+    const forwardButton = document.getElementById('forward-btn');
+    const browserFrame = document.getElementById('browser-frame');
+
+    const historyStack = [];
+    let currentIndex = -1;
+
+    function updateNavigationButtons() {
+      backButton.disabled = currentIndex <= 0;
+      forwardButton.disabled = currentIndex >= historyStack.length - 1;
+    }
+
+    function navigateTo(url) {
+      const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+      browserFrame.src = formattedUrl;
+
+      // Update history
+      if (currentIndex < historyStack.length - 1) {
+        historyStack.splice(currentIndex + 1);
+      }
+      historyStack.push(formattedUrl);
+      currentIndex++;
+      updateNavigationButtons();
+    }
+
+    goButton.addEventListener('click', () => {
+      const url = urlBar.value.trim();
+      if (url) {
+        navigateTo(url);
+      }
+    });
+
+    backButton.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        browserFrame.src = historyStack[currentIndex];
+        urlBar.value = historyStack[currentIndex];
+      }
+      updateNavigationButtons();
+    });
+
+    forwardButton.addEventListener('click', () => {
+      if (currentIndex < historyStack.length - 1) {
+        currentIndex++;
+        browserFrame.src = historyStack[currentIndex];
+        urlBar.value = historyStack[currentIndex];
+      }
+      updateNavigationButtons();
+    });
+
+    urlBar.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        goButton.click();
+      }
+    });
+  </script>
+</body>
+</html>
