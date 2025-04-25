@@ -84,76 +84,88 @@
   <iframe id="browser-frame" src="about:blank"></iframe>
 
   <script>
-    const urlBar = document.getElementById('url-bar');
-    const goButton = document.getElementById('go-btn');
-    const backButton = document.getElementById('back-btn');
-    const forwardButton = document.getElementById('forward-btn');
-    const browserFrame = document.getElementById('browser-frame');
+  const urlBar = document.getElementById('url-bar');
+  const goButton = document.getElementById('go-btn');
+  const backButton = document.getElementById('back-btn');
+  const forwardButton = document.getElementById('forward-btn');
+  const browserFrame = document.getElementById('browser-frame');
 
-    const historyStack = [];
-    let currentIndex = -1;
+  const historyStack = [];
+  let currentIndex = -1;
 
-    // Update navigation buttons based on history
-    function updateNavigationButtons() {
-      backButton.disabled = currentIndex <= 0;
-      forwardButton.disabled = currentIndex >= historyStack.length - 1;
+  // List of sites known to block iframe embedding
+  const restrictedSites = ['google.com', 'youtube.com', 'facebook.com'];
+
+  // Update navigation buttons based on history
+  function updateNavigationButtons() {
+    backButton.disabled = currentIndex <= 0;
+    forwardButton.disabled = currentIndex >= historyStack.length - 1;
+  }
+
+  // Navigate to a URL or search query
+  function navigateTo(input) {
+    let url;
+
+    // Check if input is a valid URL
+    if (input.startsWith('http') || input.startsWith('https')) {
+      url = input;
+    } else if (input.includes('.')) {
+      url = `https://${input}`;
+    } else {
+      // Treat as a search query
+      url = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
     }
 
-    // Navigate to a URL or search query
-    function navigateTo(input) {
-      let url;
+    // Check if the site is in the restricted list
+    const isRestricted = restrictedSites.some((site) => url.includes(site));
+    if (isRestricted) {
+      // Open restricted site in a new tab
+      window.open(url, '_blank');
+      return;
+    }
 
-      // Check if input is a valid URL
-      if (input.startsWith('http') || input.startsWith('https')) {
-        url = input;
-      } else if (input.includes('.')) {
-        url = `https://${input}`;
-      } else {
-        // Treat as a search query
-        url = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
-      }
+    // Load the URL in the iframe
+    browserFrame.src = url;
 
-      browserFrame.src = url;
+    // Update history
+    if (currentIndex < historyStack.length - 1) {
+      historyStack.splice(currentIndex + 1);
+    }
+    historyStack.push(url);
+    currentIndex++;
+    updateNavigationButtons();
+  }
 
-      // Update history
-      if (currentIndex < historyStack.length - 1) {
-        historyStack.splice(currentIndex + 1);
-      }
-      historyStack.push(url);
+  goButton.addEventListener('click', () => {
+    const input = urlBar.value.trim();
+    if (input) {
+      navigateTo(input);
+    }
+  });
+
+  backButton.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      browserFrame.src = historyStack[currentIndex];
+      urlBar.value = historyStack[currentIndex];
+    }
+    updateNavigationButtons();
+  });
+
+  forwardButton.addEventListener('click', () => {
+    if (currentIndex < historyStack.length - 1) {
       currentIndex++;
-      updateNavigationButtons();
+      browserFrame.src = historyStack[currentIndex];
+      urlBar.value = historyStack[currentIndex];
     }
+    updateNavigationButtons();
+  });
 
-    goButton.addEventListener('click', () => {
-      const input = urlBar.value.trim();
-      if (input) {
-        navigateTo(input);
-      }
-    });
-
-    backButton.addEventListener('click', () => {
-      if (currentIndex > 0) {
-        currentIndex--;
-        browserFrame.src = historyStack[currentIndex];
-        urlBar.value = historyStack[currentIndex];
-      }
-      updateNavigationButtons();
-    });
-
-    forwardButton.addEventListener('click', () => {
-      if (currentIndex < historyStack.length - 1) {
-        currentIndex++;
-        browserFrame.src = historyStack[currentIndex];
-        urlBar.value = historyStack[currentIndex];
-      }
-      updateNavigationButtons();
-    });
-
-    urlBar.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter') {
-        goButton.click();
-      }
-    });
-  </script>
+  urlBar.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+      goButton.click();
+    }
+  });
+</script>
 </body>
 </html>
