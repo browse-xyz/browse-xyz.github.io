@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Browser</title>
+  <title>Enhanced Web Browser</title>
   <style>
     /* General Styles */
     body {
@@ -73,11 +73,11 @@
 </head>
 <body>
   <header>
-    <h1>Simple Web Browser</h1>
+    <h1>Enhanced Web Browser</h1>
     <div class="controls">
       <button id="back-btn" disabled>Back</button>
       <button id="forward-btn" disabled>Forward</button>
-      <input type="text" id="url-bar" placeholder="Enter a URL" />
+      <input type="text" id="url-bar" placeholder="Enter a URL or search query" />
       <button id="go-btn">Go</button>
     </div>
   </header>
@@ -93,28 +93,41 @@
     const historyStack = [];
     let currentIndex = -1;
 
+    // Update navigation buttons based on history
     function updateNavigationButtons() {
       backButton.disabled = currentIndex <= 0;
       forwardButton.disabled = currentIndex >= historyStack.length - 1;
     }
 
-    function navigateTo(url) {
-      const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
-      browserFrame.src = formattedUrl;
+    // Navigate to a URL or search query
+    function navigateTo(input) {
+      let url;
+
+      // Check if input is a valid URL
+      if (input.startsWith('http') || input.startsWith('https')) {
+        url = input;
+      } else if (input.includes('.')) {
+        url = `https://${input}`;
+      } else {
+        // Treat as a search query
+        url = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+      }
+
+      browserFrame.src = url;
 
       // Update history
       if (currentIndex < historyStack.length - 1) {
         historyStack.splice(currentIndex + 1);
       }
-      historyStack.push(formattedUrl);
+      historyStack.push(url);
       currentIndex++;
       updateNavigationButtons();
     }
 
     goButton.addEventListener('click', () => {
-      const url = urlBar.value.trim();
-      if (url) {
-        navigateTo(url);
+      const input = urlBar.value.trim();
+      if (input) {
+        navigateTo(input);
       }
     });
 
